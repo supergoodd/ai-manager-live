@@ -1,0 +1,1264 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>AI Manager Live</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        --bg:#eceff1;
+        --surface:#ffffff;
+        --surface-2:#f4f6f7;
+        --ink:#171b1f;
+        --muted:#5a6570;
+        --line:#d8dee3;
+        --red:#e5484d;
+        --red-dark:#b3272d;
+        --amber:#a35b06;
+        --amber-strong:#b45309;
+        --amber-bg:#fdf1dc;
+        --green:#0f7a58;
+        --green-bg:#e2f4ec;
+        --gray-bg:#eceff1;
+        --screen:#1d2a33;
+        --screen-line:#7ee2b8;
+        --desk:#8a97a3;
+        --shadow:0 1px 2px rgba(16,24,32,.06),0 8px 24px rgba(16,24,32,.06);
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#0c1013;
+          --surface:#151b20;
+          --surface-2:#1a2229;
+          --ink:#e9edf0;
+          --muted:#98a4ae;
+          --line:#28323b;
+          --amber:#f0b24a;
+          --amber-strong:#f0b24a;
+          --amber-bg:#2b2110;
+          --green:#3ecf9a;
+          --green-bg:#123327;
+          --gray-bg:#232c33;
+          --screen:#0d1a16;
+          --screen-line:#7ee2b8;
+          --desk:#5d6d7a;
+          --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+        }
+      }
+      *{ box-sizing:border-box; }
+      html{ -webkit-text-size-adjust:100%; }
+      body{
+        margin:0; background:var(--bg); color:var(--ink);
+        font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+        font-size:16px; line-height:1.5;
+      }
+      button,[role="button"],select,summary,input,textarea{ min-height:2.25rem; }
+      button{ font:inherit; cursor:pointer; }
+      .wrap{ max-width:1060px; margin:0 auto; padding:14px 14px 40px; }
+
+      /* ---------- Live bar ---------- */
+      .livebar{
+        display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
+        background:var(--surface); border:1px solid var(--line); border-radius:16px;
+        padding:12px 16px; box-shadow:var(--shadow);
+      }
+      .live-badge{
+        display:inline-flex; align-items:center; gap:9px;
+        background:var(--red); color:#fff; border-radius:999px;
+        padding:7px 14px 7px 12px; font-weight:800; letter-spacing:.06em; font-size:.95rem;
+      }
+      .live-dot{ width:11px; height:11px; border-radius:50%; background:#fff; animation:blink 1.1s ease-in-out infinite; }
+      @keyframes blink{ 0%,100%{opacity:1} 50%{opacity:.25} }
+      .live-clock{ font-family:"JetBrains Mono",ui-monospace,monospace; font-weight:700; font-size:1.02rem; }
+      .live-total{ margin-left:auto; font-weight:700; color:var(--muted); font-size:.95rem; }
+      .live-total strong{ color:var(--ink); }
+
+      /* ---------- Panel Key UTAMA (paling atas) ---------- */
+      .key-hero{
+        margin-top:12px; background:var(--surface); border:2px solid var(--amber-strong);
+        border-radius:16px; box-shadow:var(--shadow); padding:18px 16px;
+      }
+      .key-hero.flash{ animation:keyflash 1s ease-in-out 2; }
+      @keyframes keyflash{ 0%,100%{ box-shadow:var(--shadow);} 50%{ box-shadow:0 0 0 6px var(--amber-bg), var(--shadow);} }
+      .key-hero h2{ margin:0; font-size:1.55rem; font-weight:800; line-height:1.2; }
+      .key-hero .key-sub{ margin:6px 0 0; color:var(--muted); font-size:.95rem; }
+      .key-hero .key-sub a{ color:var(--amber-strong); font-weight:800; }
+      .key-badge{
+        display:inline-flex; align-items:center; gap:7px; margin-top:12px;
+        border-radius:999px; padding:6px 13px; font-weight:800; font-size:.88rem;
+        background:#fbe7e7; color:var(--red-dark);
+      }
+      .key-badge.ok{ background:var(--green-bg); color:var(--green); }
+      .key-badge::before{ content:""; width:9px; height:9px; border-radius:50%; background:currentColor; }
+      .key-hero .key-row{ margin-top:12px; }
+      .key-hero input{
+        flex:1 1 220px; font:inherit; color:var(--ink); background:var(--surface-2);
+        border:1px solid var(--line); border-radius:10px; padding:11px 12px; min-height:2.75rem;
+      }
+      .btn-key-save{ background:var(--amber-strong); color:#fff; border:0; border-radius:10px; padding:10px 18px; font-weight:800; }
+      .key-reminder{
+        display:none; margin-top:12px; background:#fbe7e7; color:var(--red-dark);
+        border:1px solid var(--red); border-radius:10px; padding:10px 12px; font-weight:700; font-size:.92rem;
+      }
+      .key-reminder.show{ display:block; }
+      @media (prefers-color-scheme: dark){ .key-reminder{ background:#3a1719; color:#ff8589; } .key-badge{ background:#3a1719; color:#ff8589; } .key-badge.ok{ background:var(--green-bg); color:var(--green); } }
+
+      /* ---------- Blok Jam Live BESAR ---------- */
+      .clock-block{
+        margin-top:12px; background:var(--screen); color:#eafff3; border-radius:16px;
+        padding:18px 16px 16px; text-align:center; box-shadow:var(--shadow);
+      }
+      .clock-label{ font-size:.78rem; font-weight:800; letter-spacing:.14em; opacity:.75; text-transform:uppercase; }
+      .wall-clock{ font-family:"JetBrains Mono",ui-monospace,monospace; font-weight:700; font-size:3.2rem; line-height:1.05; letter-spacing:.02em; margin-top:2px; font-variant-numeric:tabular-nums; }
+      .wall-date{ font-weight:700; font-size:1rem; opacity:.9; margin-top:2px; }
+      .clock-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+      .clock-cell{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius:12px; padding:10px 8px; }
+      .clock-cell .cv{ font-family:"JetBrains Mono",ui-monospace,monospace; font-weight:700; font-size:1.45rem; line-height:1.15; font-variant-numeric:tabular-nums; }
+      .clock-cell .cl{ font-size:.8rem; font-weight:700; opacity:.8; margin-top:2px; }
+      @media (max-width:420px){ .wall-clock{ font-size:2.55rem; } .clock-cell .cv{ font-size:1.15rem; } }
+      .chip.waitkey{ background:#fbe7e7; color:var(--red-dark); }
+      @media (prefers-color-scheme: dark){ .chip.waitkey{ background:#3a1719; color:#ff8589; } }
+
+      /* ---------- Stats ---------- */
+      .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px; }
+      .stat{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:10px 14px; box-shadow:var(--shadow); }
+      .stat .num{ font-size:1.45rem; font-weight:800; line-height:1.15; font-variant-numeric:tabular-nums; }
+      .stat .lbl{ color:var(--muted); font-size:.82rem; font-weight:600; }
+      @media (max-width:520px){ .stat .num{ font-size:1.15rem; } .stat .lbl{ font-size:.74rem; } }
+
+      /* ---------- Cards & sections ---------- */
+      .card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:16px; margin-top:12px; }
+      .card h2{ margin:0 0 4px; font-size:1.12rem; font-weight:800; }
+      .card .sub{ margin:0 0 12px; color:var(--muted); font-size:.92rem; }
+
+      /* ---------- Form ---------- */
+      textarea{
+        width:100%; font:inherit; color:var(--ink); background:var(--surface-2);
+        border:1px solid var(--line); border-radius:12px; padding:12px; resize:vertical; min-height:84px;
+      }
+      textarea:focus{ outline:2px solid var(--amber-strong); outline-offset:1px; }
+      .form-row{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:10px; }
+      .btn-send{
+        background:var(--amber-strong); color:#fff; border:0; border-radius:12px;
+        padding:10px 22px; font-weight:800; font-size:1rem;
+      }
+      .btn-send:disabled{ opacity:.55; cursor:wait; }
+      .route-note{ color:var(--muted); font-size:.85rem; font-weight:600; }
+
+      /* ---------- Pipeline ---------- */
+      .pipeline{ list-style:none; margin:6px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:8px; }
+      .pipeline li{
+        flex:1 1 150px; display:flex; gap:10px; align-items:flex-start;
+        background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:10px 12px;
+      }
+      .pdot{
+        flex:0 0 auto; width:26px; height:26px; border-radius:50%; margin-top:1px;
+        background:var(--gray-bg); border:2px solid var(--line);
+        display:flex; align-items:center; justify-content:center;
+        font-size:.8rem; font-weight:800; color:var(--muted);
+      }
+      .pipeline li.active .pdot{ border-color:var(--amber-strong); background:var(--amber-bg); color:var(--amber-strong); animation:blink 1s ease-in-out infinite; }
+      .pipeline li.done .pdot{ border-color:var(--green); background:var(--green-bg); color:var(--green); animation:none; }
+      .pipeline .ptitle{ font-weight:800; font-size:.92rem; line-height:1.25; }
+      .pipeline .pstatus{ color:var(--muted); font-size:.8rem; font-weight:600; }
+      .pipeline li.active .pstatus{ color:var(--amber-strong); }
+      .pipeline li.done .pstatus{ color:var(--green); }
+
+      /* ---------- Stage ---------- */
+      .stage-head{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+      .stage-head h2{ margin:0; }
+      .onair{ color:var(--red-dark); font-weight:800; font-size:.8rem; letter-spacing:.08em; }
+      @media (prefers-color-scheme: dark){ .onair{ color:#ff8589; } }
+
+      .manager-card{
+        position:relative; display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;
+        background:var(--surface-2); border:1px solid var(--line); border-radius:14px; padding:10px 14px 12px; margin-bottom:12px;
+      }
+      .manager-fig{ flex:0 0 auto; text-align:center; }
+      .manager-fig svg{ display:block; width:170px; max-width:44vw; height:auto; }
+      .fig-name{ font-weight:800; margin-top:2px; }
+      .fig-role{ color:var(--muted); font-size:.82rem; font-weight:600; }
+      .bubble{
+        flex:1 1 220px; align-self:center; position:relative;
+        background:var(--amber-bg); border:1px solid var(--amber-strong); color:var(--ink);
+        border-radius:14px; padding:12px 14px; font-weight:700; font-size:.98rem;
+        opacity:0; transform:translateY(4px); transition:opacity .25s,transform .25s;
+      }
+      .bubble.show{ opacity:1; transform:none; }
+      .bubble::before{
+        content:""; position:absolute; left:-8px; top:50%; margin-top:-7px;
+        border:7px solid transparent; border-right-color:var(--amber-strong); border-left:0;
+      }
+      @media (max-width:560px){ .bubble::before{ display:none; } }
+
+      .team{ display:grid; grid-template-columns:repeat(auto-fit,minmax(228px,1fr)); gap:12px; }
+      .emp{
+        border:1px solid var(--line); border-radius:14px; background:var(--surface);
+        padding:12px 14px 14px; display:flex; flex-direction:column;
+      }
+      .emp .fig{ text-align:center; }
+      .emp svg{ display:block; margin:0 auto; width:190px; max-width:100%; height:auto; }
+      .emp .fig-name{ font-size:1.08rem; }
+      .status-row{ display:flex; align-items:center; gap:8px; margin-top:10px; }
+      .chip{
+        display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:4px 11px;
+        font-size:.8rem; font-weight:800; background:var(--gray-bg); color:var(--muted);
+      }
+      .chip::before{ content:""; width:8px; height:8px; border-radius:50%; background:currentColor; }
+      .chip.work{ background:var(--amber-bg); color:var(--amber-strong); }
+      .chip.work::before{ animation:blink .7s ease-in-out infinite; }
+      .chip.done{ background:var(--green-bg); color:var(--green); }
+      .chip.fail{ background:#fbe7e7; color:var(--red-dark); }
+      @media (prefers-color-scheme: dark){ .chip.fail{ background:#3a1719; color:#ff8589; } }
+      .progress{ height:7px; border-radius:99px; background:var(--gray-bg); overflow:hidden; margin-top:10px; opacity:0; transition:opacity .3s; }
+      .progress.on{ opacity:1; }
+      .progress i{ display:block; height:100%; width:0%; background:var(--amber-strong); border-radius:99px; transition:width .3s ease; }
+      .answer{
+        display:none; margin-top:12px; background:var(--surface-2); border:1px solid var(--line);
+        border-radius:10px; padding:11px 12px; font-size:.93rem; white-space:pre-wrap; word-break:break-word;
+        max-height:300px; overflow:auto;
+      }
+      .answer.show{ display:block; }
+      .answer.err{ border-color:var(--red); }
+      .emp-foot{ display:none; margin-top:10px; align-items:center; gap:8px; flex-wrap:wrap; }
+      .emp-foot.show{ display:flex; }
+      .route{ color:var(--muted); font-size:.76rem; font-weight:600; flex:1 1 auto; }
+      .btn-copy{
+        background:var(--surface); border:1px solid var(--line); color:var(--ink);
+        border-radius:9px; padding:6px 14px; font-weight:700; font-size:.85rem; min-height:2.25rem;
+      }
+
+      /* ---------- Stickman animation ---------- */
+      .sm-line{ fill:none; stroke:currentColor; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
+      .sm-head{ fill:var(--surface); stroke:currentColor; stroke-width:5; }
+      .emp .sm-head,.manager-fig .sm-head{ fill:var(--surface-2); }
+      .sm-eye{ fill:currentColor; }
+      .desk-top{ fill:var(--desk); }
+      .desk-leg{ stroke:var(--desk); stroke-width:5; stroke-linecap:round; }
+      .chair{ fill:var(--desk); opacity:.75; }
+      .kb{ fill:var(--desk); }
+      .mon{ fill:var(--screen); stroke:var(--desk); stroke-width:3; }
+      .mon-stand{ stroke:var(--desk); stroke-width:5; stroke-linecap:round; }
+      .code-line{ fill:var(--screen-line); opacity:.18; }
+      .arm{ transform-box:view-box; }
+      .arm-a{ transform-origin:57px 63px; }
+      .arm-b{ transform-origin:57px 67px; }
+      .working .arm-a{ animation:tap .26s ease-in-out infinite alternate; }
+      .working .arm-b{ animation:tap .26s ease-in-out .13s infinite alternate; }
+      @keyframes tap{ from{ transform:rotate(-5deg); } to{ transform:rotate(6deg); } }
+      .bob{ transform-box:view-box; }
+      .working .bob{ animation:bob 1.15s ease-in-out infinite; }
+      .idle .bob{ animation:bob 2.8s ease-in-out infinite; }
+      @keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(1.6px); } }
+      .working .code-line{ animation:codeline 1s linear infinite; }
+      .working .code-line:nth-child(2){ animation-delay:.3s; }
+      .working .code-line:nth-child(3){ animation-delay:.6s; }
+      @keyframes codeline{ 0%,100%{ opacity:.18; } 50%{ opacity:.95; } }
+      /* Manager poses */
+      .mgr-arm-point{ transform-box:view-box; transform-origin:66px 66px; }
+      .pointing .mgr-arm-point{ animation:point .55s ease-in-out infinite alternate; }
+      @keyframes point{ from{ transform:rotate(-7deg); } to{ transform:rotate(9deg); } }
+      .mgr-type-arms{ display:none; }
+      .helping .mgr-type-arms{ display:block; }
+      .helping .mgr-arm-point{ display:none; }
+      .mgr-arm-t1{ transform-box:view-box; transform-origin:66px 66px; }
+      .mgr-arm-t2{ transform-box:view-box; transform-origin:66px 70px; }
+      .helping .mgr-arm-t1{ animation:tap .26s ease-in-out infinite alternate; }
+      .helping .mgr-arm-t2{ animation:tap .26s ease-in-out .13s infinite alternate; }
+      .mgr-bob{ transform-box:view-box; }
+      .helping .mgr-bob{ animation:bob 1.15s ease-in-out infinite; }
+      .mgr-screen{ opacity:.25; }
+      .helping .mgr-screen{ opacity:1; animation:codeline 1s linear infinite; }
+
+      /* ---------- Hasil ---------- */
+      #hasilCard{ display:none; border-color:var(--green); }
+      #hasilCard.show{ display:block; }
+      .final-text{ white-space:pre-wrap; word-break:break-word; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:13px 14px; max-height:420px; overflow:auto; }
+      .final-meta{ color:var(--muted); font-size:.85rem; font-weight:600; margin-top:10px; }
+
+      /* ---------- Feed ---------- */
+      .feed{ list-style:none; margin:0; padding:0; max-height:320px; overflow:auto; }
+      .feed li{ display:flex; gap:10px; padding:8px 2px; border-bottom:1px dashed var(--line); font-size:.93rem; }
+      .feed li:last-child{ border-bottom:0; }
+      .feed time{ font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.8rem; font-weight:700; color:var(--amber-strong); flex:0 0 auto; padding-top:2px; }
+      .feed .empty{ color:var(--muted); }
+
+      /* ---------- Key panel ---------- */
+      details.card summary{ cursor:pointer; font-weight:800; font-size:1.02rem; padding:2px 0; }
+      .key-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+      .key-row input{
+        flex:1 1 220px; font:inherit; color:var(--ink); background:var(--surface-2);
+        border:1px solid var(--line); border-radius:10px; padding:9px 12px;
+      }
+      .btn-ghost{ background:var(--surface); border:1px solid var(--line); color:var(--ink); border-radius:10px; padding:8px 16px; font-weight:700; }
+      .key-status{ color:var(--muted); font-size:.88rem; font-weight:600; margin-top:8px; }
+      .key-status.ok{ color:var(--green); }
+      footer{ color:var(--muted); font-size:.82rem; text-align:center; margin-top:18px; }
+
+      /* ---------- Menu atas ---------- */
+      .topnav{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+      .topnav a{
+        flex:1 1 140px; text-align:center; text-decoration:none; font-weight:800; font-size:.95rem;
+        background:var(--surface); color:var(--ink); border:1px solid var(--line); border-radius:12px;
+        padding:10px 12px; box-shadow:var(--shadow);
+      }
+      .topnav a.anim-link{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+
+      /* ---------- Animasi / Layar Hiburan ---------- */
+      .anim-head{ display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 12px; }
+      .anim-head h2{ margin:0; }
+      .anim-tag{ background:var(--amber-bg); color:var(--amber-strong); border-radius:999px; padding:4px 11px; font-size:.78rem; font-weight:800; }
+      .player-wrap{ background:#0b0f13; border-radius:14px; overflow:hidden; margin-top:12px; }
+      .player-wrap:fullscreen{ border-radius:0; display:flex; flex-direction:column; }
+      .player-wrap:fullscreen .anim-canvas{ flex:1 1 auto; }
+      .anim-canvas{ display:block; width:100%; aspect-ratio:16/9; background:#101820; }
+      .subtitle-bar{
+        min-height:64px; background:#0b0f13; color:#fff; padding:10px 14px 12px; text-align:center;
+        display:flex; flex-direction:column; justify-content:center; gap:2px;
+      }
+      .subtitle-bar .spk{ font-weight:800; font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:#ffd98a; }
+      .subtitle-bar .txt{ font-size:1.02rem; font-weight:700; line-height:1.35; }
+      .anim-progress{ height:8px; background:#232c33; }
+      .anim-progress i{ display:block; height:100%; width:0%; background:var(--red); transition:width .2s linear; }
+      .anim-controls{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:12px; }
+      .btn-anim{
+        background:var(--surface-2); border:1px solid var(--line); color:var(--ink);
+        border-radius:10px; padding:8px 14px; font-weight:800; font-size:.92rem;
+      }
+      .btn-anim.primary{ background:var(--red); border-color:var(--red); color:#fff; min-width:132px; }
+      .anim-controls select{
+        font:inherit; font-weight:700; color:var(--ink); background:var(--surface-2);
+        border:1px solid var(--line); border-radius:10px; padding:8px 10px;
+      }
+      .anim-controls label{ font-size:.85rem; font-weight:700; color:var(--muted); display:inline-flex; align-items:center; gap:6px; }
+      .anim-meta{ color:var(--muted); font-size:.88rem; font-weight:600; margin-top:8px; }
+      .scene-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; margin-top:12px; }
+      .scene-btn{
+        text-align:left; background:var(--surface-2); border:1px solid var(--line); color:var(--ink);
+        border-radius:10px; padding:9px 11px; font-weight:700; font-size:.85rem; line-height:1.3;
+      }
+      .scene-btn small{ display:block; color:var(--muted); font-weight:600; font-size:.74rem; margin-top:2px; }
+      .scene-btn.on{ border-color:var(--red); background:#fbe7e7; color:var(--red-dark); }
+      @media (prefers-color-scheme: dark){ .scene-btn.on{ background:#3a1719; color:#ff8589; } }
+      .anim-note{ background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:.88rem; color:var(--muted); margin-top:12px; }
+      .anim-note strong{ color:var(--ink); }
+
+      @media (prefers-reduced-motion: reduce){
+        *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+
+      <!-- ======= LIVE BAR ======= -->
+      <div class="livebar" role="status" aria-label="Status live">
+        <span class="live-badge"><span class="live-dot"></span>LIVE&nbsp;<span class="live-clock" id="sessionClock">00:00:00</span></span>
+        <span class="live-total">Total live: <strong id="totalLive">0 jam 0 menit</strong></span>
+      </div>
+
+      <!-- ======= MENU ======= -->
+      <nav class="topnav" aria-label="Menu situs">
+        <a href="#ruangTim">🔴 Live — Ruang Tim</a>
+        <a href="#animasiSection" class="anim-link">🎬 Animasi — Misi Brankas Terakhir</a>
+        <a href="#feedSection">📰 Feed Aktivitas</a>
+      </nav>
+
+      <!-- ======= PANEL KEY UTAMA — tepat di bawah header LIVE ======= -->
+      <section class="key-hero" id="keyPanel" aria-label="Tempel key API OpenRouter">
+        <h2>🔑 Tempel Key API</h2>
+        <p class="key-sub">Ini jalur <strong>UTAMA</strong> tim ini. Tempel key OpenRouter gratis kamu (dari <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a> — daftar gratis, tanpa kartu). Tanpa key, ChatGPT, Claude &amp; DeepSeek <strong>menunggu dan tidak menjawab</strong> — hanya AI Gratis yang tetap jalan. Key hanya tersimpan di browser HP ini (localStorage), tidak masuk ke halaman untuk orang lain.</p>
+        <div><span class="key-badge" id="keyBadge">Belum ada key — 3 karyawan menunggu</span></div>
+        <div class="key-row">
+          <input type="password" id="keyInput" placeholder="sk-or-v1-…" autocomplete="off" aria-label="Kunci OpenRouter" />
+          <button type="button" class="btn-key-save" id="keySave">Simpan Key &amp; Aktifkan Tim</button>
+          <button type="button" class="btn-ghost" id="keyClear">Hapus</button>
+        </div>
+        <div class="key-status" id="keyStatus"></div>
+        <div class="key-reminder" id="keyReminder">⚠️ Tempel key dulu di panel ini — ChatGPT, Claude &amp; DeepSeek belum bisa menjawab tanpa key. AI Gratis tetap bisa jalan.</div>
+      </section>
+
+      <!-- ======= BLOK JAM LIVE BESAR ======= -->
+      <section class="clock-block" aria-label="Jam live">
+        <div class="clock-label">⏱️ Jam Sekarang — Waktu Perangkat Kamu</div>
+        <div class="wall-clock" id="wallClock">--:--:--</div>
+        <div class="wall-date" id="wallDate">Memuat tanggal…</div>
+        <div class="clock-grid">
+          <div class="clock-cell"><div class="cv" id="sessionClockBig">00:00:00</div><div class="cl">🔴 Timer Sesi Live Ini</div></div>
+          <div class="clock-cell"><div class="cv" id="totalLiveBig">0 jam 0 menit</div><div class="cl">Total Waktu Live Terakumulasi</div></div>
+        </div>
+      </section>
+
+      <!-- ======= STATS ======= -->
+      <div class="stats">
+        <div class="stat"><div class="num" id="statTasks">0</div><div class="lbl">Tugas selesai hari ini</div></div>
+        <div class="stat"><div class="num" id="statAnswers">0</div><div class="lbl">Jawaban terkumpul</div></div>
+        <div class="stat"><div class="num" id="statTotalShort">0 mnt</div><div class="lbl">Waktu live total</div></div>
+      </div>
+
+      <!-- ======= FORM ======= -->
+      <section class="card" aria-label="Kirim ide atau tugas">
+        <h2>Kirim Ide / Tugas ke Tim</h2>
+        <p class="sub">Tulis ide atau tugas Anda. Manager akan membagikannya ke semua karyawan, ikut membantu menggabungkan, lalu hasilnya diserahkan ke Anda. <strong>ChatGPT, Claude &amp; DeepSeek hanya menjawab kalau key sudah ditempel di panel atas</strong> — AI Gratis tetap jalan tanpa key.</p>
+        <form id="taskForm">
+          <textarea id="taskInput" placeholder="Contoh: Buatkan rencana konten seminggu untuk toko online saya…" aria-label="Ide atau tugas"></textarea>
+          <div class="form-row">
+            <button type="submit" class="btn-send" id="sendBtn">Kirim ke Tim</button>
+            <span class="route-note" id="routeNote"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- ======= PIPELINE ======= -->
+      <section class="card" aria-label="Alur kerja tim">
+        <h2>Alur Kerja Live</h2>
+        <ol class="pipeline" id="pipeline">
+          <li data-step="idea"><span class="pdot">1</span><div><div class="ptitle">Ide dari Bos</div><div class="pstatus">Menunggu</div></div></li>
+          <li data-step="assign"><span class="pdot">2</span><div><div class="ptitle">Manager bagi tugas</div><div class="pstatus">Menunggu</div></div></li>
+          <li data-step="build"><span class="pdot">3</span><div><div class="ptitle">Karyawan membangun</div><div class="pstatus">Menunggu</div></div></li>
+          <li data-step="merge"><span class="pdot">4</span><div><div class="ptitle">Manager bantu + gabungkan</div><div class="pstatus">Menunggu</div></div></li>
+          <li data-step="result"><span class="pdot">5</span><div><div class="ptitle">Hasil untuk Bos</div><div class="pstatus">Menunggu</div></div></li>
+        </ol>
+      </section>
+
+      <!-- ======= STAGE ======= -->
+      <section class="card" id="ruangTim" aria-label="Ruang tim live">
+        <div class="stage-head"><h2>Ruang Tim</h2><span class="onair">● SEDANG LIVE</span></div>
+        <p class="sub">Tonton manager dan karyawan bekerja secara real-time.</p>
+
+        <div class="manager-card" id="managerCard">
+          <div class="manager-fig" id="managerFig">
+            <svg viewBox="0 0 220 168" role="img" aria-label="Stickman Muse, manager tim">
+              <!-- meja + laptop manager -->
+              <rect class="desk-top" x="118" y="118" width="92" height="9" rx="3"/>
+              <line class="desk-leg" x1="126" y1="127" x2="126" y2="152"/>
+              <line class="desk-leg" x1="202" y1="127" x2="202" y2="152"/>
+              <rect class="mon" x="140" y="82" width="46" height="34" rx="4"/>
+              <rect class="mgr-screen" x="146" y="88" width="34" height="5" rx="2" fill="#7ee2b8"/>
+              <rect class="mgr-screen" x="146" y="97" width="26" height="5" rx="2" fill="#7ee2b8" style="animation-delay:.4s"/>
+              <line class="mon-stand" x1="163" y1="116" x2="163" y2="120"/>
+              <g class="mgr-bob">
+                <circle class="sm-head" cx="58" cy="30" r="15"/>
+                <circle class="sm-eye" cx="53" cy="28" r="2.2"/>
+                <circle class="sm-eye" cx="63" cy="28" r="2.2"/>
+                <path class="sm-line" d="M48 38 Q58 44 68 38" stroke-width="3.5"/>
+                <line class="sm-line" x1="58" y1="45" x2="58" y2="102"/>
+                <line class="sm-line" x1="58" y1="102" x2="42" y2="152"/>
+                <line class="sm-line" x1="58" y1="102" x2="76" y2="152"/>
+                <!-- lengan menunjuk -->
+                <g class="mgr-arm-point"><line class="sm-line" x1="58" y1="64" x2="112" y2="46"/></g>
+                <!-- lengan mengetik (mode membantu) -->
+                <g class="mgr-type-arms">
+                  <g class="mgr-arm-t1"><line class="sm-line" x1="58" y1="64" x2="128" y2="104"/></g>
+                  <g class="mgr-arm-t2"><line class="sm-line" x1="58" y1="68" x2="136" y2="108"/></g>
+                </g>
+                <line class="sm-line" x1="58" y1="64" x2="34" y2="96"/>
+              </g>
+            </svg>
+            <div class="fig-name">Muse (Manager)</div>
+            <div class="fig-role">Membagi tugas &amp; ikut membantu</div>
+          </div>
+          <div class="bubble" id="managerBubble">Halo Bos! Kirim ide atau tugas, tim langsung kerja live di sini.</div>
+        </div>
+
+        <div class="team" id="teamGrid"></div>
+      </section>
+
+      <!-- ======= HASIL ======= -->
+      <section class="card" id="hasilCard" aria-label="Hasil untuk Bos">
+        <h2>Hasil untuk Bos</h2>
+        <p class="sub">Rangkuman gabungan dari jawaban asli karyawan, disusun oleh Manager.</p>
+        <div class="final-text" id="finalText"></div>
+        <div class="form-row">
+          <button type="button" class="btn-copy" id="copyFinal">Salin Hasil</button>
+          <span class="final-meta" id="finalMeta"></span>
+        </div>
+      </section>
+
+      <!-- ======= FEED ======= -->
+      <section class="card" id="feedSection" aria-label="Feed aktivitas live">
+        <h2>Feed Aktivitas Live</h2>
+        <p class="sub">Hanya aktivitas nyata yang tercatat di sini.</p>
+        <ul class="feed" id="feed">
+          <li class="empty" id="feedEmpty"><span>Belum ada aktivitas. Kirim ide pertama Anda, feed akan bergerak live.</span></li>
+        </ul>
+      </section>
+
+      <!-- ======= ANIMASI — LAYAR HIBURAN ======= -->
+      <section class="card" id="animasiSection" aria-label="Animasi stickman Misi Brankas Terakhir">
+        <div class="anim-head">
+          <h2>🎬 Animasi — Stickman: Misi Brankas Terakhir</h2>
+          <span class="anim-tag">LAYAR HIBURAN • DI DALAM SITUS LIVE INI</span>
+        </div>
+        <p class="sub">Raka, mantan pencuri yang sudah pensiun, dibujuk untuk satu misi terakhir: mencuri berlian <strong>“Bintang Malam”</strong> dari museum, dibantu Sari si peretas dan Dimas si pengemudi. Twist-nya: berlian di brankas ternyata <strong>palsu</strong> — dan yang menyewa mereka adalah kurator museumnya sendiri, demi klaim asuransi. Di akhir, tim mencuri berlian <em>asli</em> dari brankas rahasia sang kurator. 12 adegan, sekitar 8 menit bila ditonton penuh dengan suara.</p>
+
+        <div class="player-wrap" id="playerWrap">
+          <canvas class="anim-canvas" id="animCanvas" width="960" height="540" aria-label="Layar animasi stickman"></canvas>
+          <div class="subtitle-bar" aria-live="polite">
+            <div class="spk" id="subSpeaker">MISI BRANKAS TERAKHIR</div>
+            <div class="txt" id="subText">Tekan Putar untuk mulai. Raka sudah pensiun… katanya.</div>
+          </div>
+          <div class="anim-progress"><i id="animProg"></i></div>
+        </div>
+
+        <div class="anim-controls">
+          <button type="button" class="btn-anim primary" id="btnPlay">▶ Putar</button>
+          <button type="button" class="btn-anim" id="btnRestart">↺ Ulang</button>
+          <button type="button" class="btn-anim" id="btnPrevScene">⏮ Adegan</button>
+          <button type="button" class="btn-anim" id="btnNextScene">Adegan ⏭</button>
+          <label>Adegan
+            <select id="sceneSelect" aria-label="Pilih adegan"></select>
+          </label>
+          <label>Kecepatan
+            <select id="speedSelect" aria-label="Kecepatan putar">
+              <option value="0.75">0,75×</option>
+              <option value="1" selected>1×</option>
+              <option value="1.25">1,25×</option>
+              <option value="1.5">1,5×</option>
+              <option value="2">2×</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="ttsToggle" checked style="min-height:auto" /> Suara TTS</label>
+          <button type="button" class="btn-anim" id="btnFull">⛶ Layar Penuh</button>
+        </div>
+        <div class="anim-meta" id="animMeta">Adegan 1 dari 12 • Durasi sesi ini 00:00 • Lorong laser &amp; brankas tampil dengan efek kedalaman 3D di kanvas.</div>
+
+        <div class="scene-grid" id="sceneGrid" aria-label="Daftar adegan"></div>
+
+        <div class="anim-note"><strong>Tentang suara &amp; gambar:</strong> Semua gambar digambar langsung dengan kanvas (stickman bergerak prosedural — jalan, jongkok, mengetik, menyetir — plus getaran kamera halus). Suara dialog adalah <strong>suara TTS dari perangkat kamu</strong> (beda nada per karakter), bukan suara manusia asli. Efek bunyi (laser, klik brankas, alarm, mesin mobil) dibuat dengan WebAudio di perangkat. Tanpa file video, tanpa aset berbayar.</div>
+      </section>
+
+      <footer>AI Manager Live — semua jawaban berasal dari API asli saat Anda mengirim tugas. Key ditempel sendiri oleh Bos di panel “Tempel Key API” di atas dan hanya tersimpan di perangkat ini.</footer>
+    </main>
+
+    <script>
+    (function(){
+      "use strict";
+
+      /* ================= Data tim ================= */
+      var EMP = [
+        { id:"chatgpt", name:"ChatGPT", color:"#0e9f6e", role:"Ide & penulisan kreatif — pakai key",
+          needsKey:true,
+          model:"openai/gpt-oss-120b:free",
+          sys:"Kamu adalah ChatGPT, karyawan AI di tim ini. Keahlianmu: ide segar, penulisan, dan penjelasan yang jelas. Jawab dalam Bahasa Indonesia, langsung ke inti, maksimal sekitar 250 kata kecuali tugasnya butuh lebih." },
+        { id:"claude", name:"Claude", color:"#cf6242", role:"Teliti & terstruktur — pakai key",
+          needsKey:true,
+          model:"google/gemma-3-27b-it:free",
+          sys:"Kamu adalah Claude, karyawan AI di tim ini. Keahlianmu: ketelitian, struktur rapi, dan pengecekan detail. Jawab dalam Bahasa Indonesia dengan struktur yang jelas, maksimal sekitar 250 kata kecuali tugasnya butuh lebih." },
+        { id:"deepseek", name:"DeepSeek", color:"#3e6ae1", role:"Logika, analisis & kode — pakai key",
+          needsKey:true,
+          model:"deepseek/deepseek-chat-v3-0324:free",
+          sys:"Kamu adalah DeepSeek, karyawan AI di tim ini. Keahlianmu: logika, analisis langkah demi langkah, angka, dan kode. Jawab dalam Bahasa Indonesia, runtut dan praktis, maksimal sekitar 250 kata kecuali tugasnya butuh lebih." },
+        { id:"gratis", name:"AI Gratis", color:"#c2437e", role:"Serba bisa — tanpa key",
+          needsKey:false,
+          model:null,
+          sys:"Kamu adalah AI Gratis, karyawan AI serba bisa di tim ini yang selalu jalan tanpa key. Jawab dalam Bahasa Indonesia, membantu dan praktis, maksimal sekitar 250 kata kecuali tugasnya butuh lebih." }
+      ];
+      var MGR_SYS = "Kamu adalah Muse, manager tim AI. Tugasmu sekarang: gabungkan jawaban para karyawan menjadi SATU hasil akhir yang rapi dan paling bermanfaat untuk Bos. Ambil yang terbaik dari tiap jawaban, buang duplikasi, jangan mengarang hal yang tidak ada di jawaban karyawan. Tulis dalam Bahasa Indonesia.";
+
+      /* ================= Penyimpanan lokal ================= */
+      var LS = {
+        get:function(k,d){ try{ var v = localStorage.getItem(k); return v===null? d : v; }catch(e){ return d; } },
+        set:function(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+        del:function(k){ try{ localStorage.removeItem(k); }catch(e){} }
+      };
+      function getKey(){ return LS.get("aiml_key","") || ""; }
+
+      /* ================= Timer live ================= */
+      var t0 = Date.now();
+      var baseTotal = parseInt(LS.get("aiml_total_live_sec","0"),10) || 0;
+      var sessionEl = document.getElementById("sessionClock");
+      var sessionBigEl = document.getElementById("sessionClockBig");
+      var totalEl = document.getElementById("totalLive");
+      var totalBigEl = document.getElementById("totalLiveBig");
+      var totalShortEl = document.getElementById("statTotalShort");
+      var wallEl = document.getElementById("wallClock");
+      var wallDateEl = document.getElementById("wallDate");
+      function pad(n){ return (n<10?"0":"")+n; }
+      function fmtHMS(s){ var h=Math.floor(s/3600), m=Math.floor(s%3600/60), d=s%60; return pad(h)+":"+pad(m)+":"+pad(d); }
+      function fmtJamMenit(s){ var h=Math.floor(s/3600), m=Math.floor(s%3600/60); return h+" jam "+m+" menit"; }
+      function fmtTotalShort(s){ var h=Math.floor(s/3600), m=Math.floor(s%3600/60); return h>0 ? (h+" jam "+m+" mnt") : (m+" mnt"); }
+      function tick(){
+        var now = new Date();
+        if(wallEl) wallEl.textContent = pad(now.getHours())+":"+pad(now.getMinutes())+":"+pad(now.getSeconds());
+        if(wallDateEl){
+          try{ wallDateEl.textContent = new Intl.DateTimeFormat("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"}).format(now); }
+          catch(e){ wallDateEl.textContent = now.toDateString(); }
+        }
+        var el = Math.floor((Date.now()-t0)/1000);
+        sessionEl.textContent = fmtHMS(el);
+        if(sessionBigEl) sessionBigEl.textContent = fmtHMS(el);
+        var tot = baseTotal + el;
+        totalEl.textContent = fmtJamMenit(tot);
+        if(totalBigEl) totalBigEl.textContent = fmtJamMenit(tot);
+        totalShortEl.textContent = fmtTotalShort(tot);
+        if(el % 5 === 0){ LS.set("aiml_total_live_sec", String(tot)); }
+      }
+      tick(); setInterval(tick, 1000);
+      window.addEventListener("pagehide", function(){
+        LS.set("aiml_total_live_sec", String(baseTotal + Math.floor((Date.now()-t0)/1000)));
+      });
+
+      /* ================= Statistik ================= */
+      function todayStr(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+      var tasksToday = 0;
+      try{ var t = JSON.parse(LS.get("aiml_tasks_today","null")||"null"); if(t && t.date===todayStr()) tasksToday = t.count||0; }catch(e){}
+      var answersTotal = parseInt(LS.get("aiml_answers_total","0"),10) || 0;
+      var statTasks = document.getElementById("statTasks");
+      var statAnswers = document.getElementById("statAnswers");
+      function renderStats(){ statTasks.textContent = tasksToday; statAnswers.textContent = answersTotal; }
+      renderStats();
+
+      /* ================= Feed ================= */
+      var feedEl = document.getElementById("feed");
+      var feedEmpty = document.getElementById("feedEmpty");
+      function nowTime(){ var d=new Date(); return pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds()); }
+      function feed(msg){
+        if(feedEmpty){ feedEmpty.remove(); feedEmpty = null; }
+        var li = document.createElement("li");
+        var tm = document.createElement("time"); tm.textContent = nowTime();
+        var sp = document.createElement("span"); sp.textContent = msg;
+        li.appendChild(tm); li.appendChild(sp);
+        feedEl.insertBefore(li, feedEl.firstChild);
+        while(feedEl.children.length > 40){ feedEl.removeChild(feedEl.lastChild); }
+      }
+
+      /* ================= Pipeline ================= */
+      function setStep(name, state){
+        var li = document.querySelector('.pipeline li[data-step="'+name+'"]');
+        if(!li) return;
+        li.classList.remove("active","done");
+        var st = li.querySelector(".pstatus");
+        if(state==="active"){ li.classList.add("active"); st.textContent = "Berlangsung…"; li.querySelector(".pdot").textContent = "●"; }
+        else if(state==="done"){ li.classList.add("done"); st.textContent = "Selesai • "+nowTime(); li.querySelector(".pdot").textContent = "✓"; }
+        else { st.textContent = "Menunggu"; li.querySelector(".pdot").textContent = {idea:"1",assign:"2",build:"3",merge:"4",result:"5"}[name]; }
+      }
+      function resetPipeline(){ ["idea","assign","build","merge","result"].forEach(function(s){ setStep(s,"wait"); }); }
+
+      /* ================= Stickman karyawan ================= */
+      function deskSVG(){
+        return ''+
+        '<svg viewBox="0 0 220 160" role="img" aria-label="Stickman sedang mengetik di komputer">'+
+          '<rect class="chair" x="30" y="64" width="8" height="52" rx="4"/>'+
+          '<rect class="desk-top" x="26" y="110" width="168" height="9" rx="3"/>'+
+          '<line class="desk-leg" x1="36" y1="119" x2="36" y2="150"/>'+
+          '<line class="desk-leg" x1="184" y1="119" x2="184" y2="150"/>'+
+          '<rect class="mon" x="126" y="52" width="66" height="46" rx="5"/>'+
+          '<g><rect class="code-line" x="134" y="61" width="42" height="6" rx="3"/><rect class="code-line" x="134" y="72" width="50" height="6" rx="3"/><rect class="code-line" x="134" y="83" width="34" height="6" rx="3"/></g>'+
+          '<line class="mon-stand" x1="159" y1="98" x2="159" y2="110"/>'+
+          '<rect class="kb" x="56" y="102" width="56" height="8" rx="4"/>'+
+          '<g class="bob">'+
+            '<circle class="sm-head" cx="58" cy="38" r="14"/>'+
+            '<circle class="sm-eye" cx="53" cy="36" r="2"/>'+
+            '<circle class="sm-eye" cx="63" cy="36" r="2"/>'+
+            '<line class="sm-line" x1="58" y1="52" x2="56" y2="88"/>'+
+            '<line class="sm-line" x1="56" y1="88" x2="84" y2="93"/>'+
+            '<line class="sm-line" x1="84" y1="93" x2="84" y2="118"/>'+
+            '<g class="arm arm-a"><line class="sm-line" x1="57" y1="60" x2="88" y2="100"/></g>'+
+            '<g class="arm arm-b"><line class="sm-line" x1="57" y1="64" x2="97" y2="102"/></g>'+
+          '</g>'+
+        '</svg>';
+      }
+      var teamGrid = document.getElementById("teamGrid");
+      EMP.forEach(function(e){
+        var card = document.createElement("article");
+        card.className = "emp idle"; card.id = "emp-"+e.id; card.style.color = e.color;
+        card.innerHTML =
+          '<div class="fig">'+deskSVG()+
+            '<div class="fig-name" style="color:var(--ink)">'+e.name+'</div>'+
+            '<div class="fig-role">'+e.role+'</div></div>'+
+          '<div class="status-row"><span class="chip" data-role="chip">Siaga</span></div>'+
+          '<div class="progress"><i></i></div>'+
+          '<div class="answer" data-role="answer"></div>'+
+          '<div class="emp-foot"><span class="route" data-role="route"></span>'+
+          '<button type="button" class="btn-copy" data-role="copy">Salin Jawaban</button></div>';
+        teamGrid.appendChild(card);
+        e.card = card;
+        e.chip = card.querySelector('[data-role="chip"]');
+        e.bar = card.querySelector(".progress");
+        e.barFill = card.querySelector(".progress i");
+        e.answerEl = card.querySelector('[data-role="answer"]');
+        e.foot = card.querySelector(".emp-foot");
+        e.routeEl = card.querySelector('[data-role="route"]');
+        card.querySelector('[data-role="copy"]').addEventListener("click", function(){
+          copyText(e.answerEl.textContent, this);
+        });
+      });
+      function setEmpStatus(e, text, cls){
+        e.chip.textContent = text;
+        e.chip.className = "chip" + (cls ? " "+cls : "");
+      }
+      function startProgress(e){
+        e.bar.classList.add("on");
+        var p = 4;
+        e.barFill.style.width = p+"%";
+        e._prog = setInterval(function(){ p = Math.min(92, p + Math.random()*7); e.barFill.style.width = p+"%"; }, 350);
+      }
+      function stopProgress(e, ok){
+        if(e._prog){ clearInterval(e._prog); e._prog = null; }
+        e.barFill.style.width = "100%";
+        setTimeout(function(){ e.bar.classList.remove("on"); e.barFill.style.width = "0%"; }, 700);
+      }
+
+      /* ================= Salin teks ================= */
+      function copyText(text, btn){
+        function done(){ if(btn){ var o = btn.textContent; btn.textContent = "Tersalin ✓"; setTimeout(function(){ btn.textContent = o; }, 1600); } }
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(text).then(done, function(){ fallback(); });
+        } else { fallback(); }
+        function fallback(){
+          var ta = document.createElement("textarea");
+          ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select();
+          try{ document.execCommand("copy"); }catch(e){}
+          document.body.removeChild(ta); done();
+        }
+      }
+
+      /* ================= API asli ================= */
+      function fetchTimeout(url, opts, ms){
+        var ctrl = new AbortController();
+        var id = setTimeout(function(){ ctrl.abort(); }, ms || 60000);
+        opts = opts || {}; opts.signal = ctrl.signal;
+        return fetch(url, opts).finally(function(){ clearTimeout(id); });
+      }
+      function orChat(key, model, sys, user){
+        return fetchTimeout("https://openrouter.ai/api/v1/chat/completions", {
+          method:"POST",
+          headers:{ "Authorization":"Bearer "+key, "Content-Type":"application/json", "X-Title":"AI Manager Live" },
+          body: JSON.stringify({ model:model, max_tokens:1500,
+            messages:[{role:"system",content:sys},{role:"user",content:user}] })
+        }).then(function(r){
+          if(!r.ok) throw new Error("OpenRouter HTTP "+r.status);
+          return r.json();
+        }).then(function(j){
+          var t = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+          if(!t) throw new Error("Jawaban kosong dari OpenRouter");
+          return t.trim();
+        });
+      }
+      function pollinations(prompt){
+        return fetchTimeout("https://text.pollinations.ai/"+encodeURIComponent(prompt), { method:"GET" }, 60000)
+        .then(function(r){ if(!r.ok) throw new Error("Pollinations HTTP "+r.status); return r.text(); })
+        .then(function(t){ t = (t||"").trim(); if(!t) throw new Error("Jawaban kosong dari Pollinations"); return t; });
+      }
+      function askEmployee(e, task){
+        var key = getKey();
+        if(e.needsKey && !key){
+          return Promise.reject(new Error("MENUNGGU_KEY"));
+        }
+        var chain = Promise.reject(new Error("start"));
+        if(key && e.model){
+          chain = chain.catch(function(){ return orChat(key, e.model, e.sys, task).then(function(t){ return { text:t, route:"OpenRouter • "+e.model }; }); });
+          chain = chain.catch(function(){ return orChat(key, "openrouter/free", e.sys, task).then(function(t){ return { text:t, route:"OpenRouter • openrouter/free" }; }); });
+        }
+        chain = chain.catch(function(){
+          return pollinations(e.sys+"\n\nTugas dari Bos: "+task).then(function(t){ return { text:t, route:"AI Gratis via Pollinations (tanpa key)" }; });
+        });
+        return chain;
+      }
+      function askManager(task, answers){
+        var joined = answers.map(function(a){ return "— "+a.name+" —\n"+a.text; }).join("\n\n");
+        var user = "Ide/tugas dari Bos:\n"+task+"\n\nJawaban para karyawan:\n\n"+joined+"\n\nSekarang susun hasil akhir gabungannya untuk Bos.";
+        var key = getKey();
+        var chain = Promise.reject(new Error("start"));
+        if(key){
+          chain = chain.catch(function(){ return orChat(key, "openrouter/free", MGR_SYS, user); });
+        }
+        chain = chain.catch(function(){ return pollinations(MGR_SYS+"\n\n"+user); });
+        return chain;
+      }
+
+      /* ================= Manager ================= */
+      var managerCard = document.getElementById("managerCard");
+      var bubble = document.getElementById("managerBubble");
+      function managerSay(text){ bubble.textContent = text; bubble.classList.add("show"); }
+      function managerPoint(on){ managerCard.classList.toggle("pointing", !!on); }
+      function managerHelp(on){ managerCard.classList.toggle("helping", !!on); }
+
+      function wait(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+
+      /* ================= Alur utama ================= */
+      var busy = false;
+      var form = document.getElementById("taskForm");
+      var input = document.getElementById("taskInput");
+      var sendBtn = document.getElementById("sendBtn");
+      var hasilCard = document.getElementById("hasilCard");
+      var finalText = document.getElementById("finalText");
+      var finalMeta = document.getElementById("finalMeta");
+      document.getElementById("copyFinal").addEventListener("click", function(){ copyText(finalText.textContent, this); });
+
+      form.addEventListener("submit", function(ev){
+        ev.preventDefault();
+        var task = input.value.trim();
+        if(!task || busy) return;
+        if(!getKey()){
+          var panel = document.getElementById("keyPanel");
+          var rem = document.getElementById("keyReminder");
+          if(rem) rem.classList.add("show");
+          if(panel){ panel.classList.remove("flash"); void panel.offsetWidth; panel.classList.add("flash"); panel.scrollIntoView({ behavior:"smooth", block:"start" }); }
+          feed("Pengingat: belum ada key — ChatGPT, Claude & DeepSeek menunggu key. Hanya AI Gratis yang akan menjawab tugas ini.");
+          managerSay("Bos, tempel key dulu di panel 🔑 Tempel Key API di paling atas — ChatGPT, Claude & DeepSeek masih menunggu key. Tugas ini saya teruskan ke AI Gratis dulu ya.");
+          /* Tetap jalankan tugas: hanya AI Gratis yang menjawab, 3 karyawan lain status menunggu key. */
+          setTimeout(function(){ runTask(task); }, 900);
+          return;
+        }
+        runTask(task);
+      });
+
+      function runTask(task){
+        busy = true; sendBtn.disabled = true; sendBtn.textContent = "Tim Sedang Bekerja…";
+        hasilCard.classList.remove("show");
+        resetPipeline();
+        var hasKeyNow = !!getKey();
+        EMP.forEach(function(e){
+          if(e.needsKey && !hasKeyNow){ setEmpStatus(e, "Menunggu key — tempel key di atas", "waitkey"); }
+          else { setEmpStatus(e, "Siaga", ""); }
+          e.answerEl.classList.remove("show","err"); e.answerEl.textContent = "";
+          e.foot.classList.remove("show"); e.routeEl.textContent = "";
+          e.card.classList.remove("working"); e.card.classList.add("idle");
+        });
+
+        /* Tahap 1 — Ide dari Bos */
+        setStep("idea","active");
+        feed("Ide diterima dari Bos: “"+(task.length>90 ? task.slice(0,90)+"…" : task)+"”");
+
+        wait(600).then(function(){
+          setStep("idea","done");
+
+          /* Tahap 2 — Manager bagi tugas */
+          setStep("assign","active");
+          managerSay("Tim, kerjakan ini: \u201C" + (task.length>70 ? task.slice(0,70)+"\u2026" : task) + "\u201D \u2014 ChatGPT, Claude, DeepSeek, AI Gratis, mulai!");
+          managerPoint(true);
+          feed("Manager membagikan tugas ke 4 karyawan.");
+          return wait(1600);
+        }).then(function(){
+          setStep("assign","done");
+          managerPoint(false);
+
+          /* Tahap 3 — Karyawan membangun */
+          setStep("build","active");
+          var jobs = EMP.map(function(e, i){
+            if(e.needsKey && !getKey()){
+              return wait(i*300).then(function(){
+                setEmpStatus(e, "Menunggu key — tempel key di atas", "waitkey");
+                e.answerEl.textContent = e.name+" belum bisa menjawab — belum ada key API. Tempel key kamu di panel 🔑 Tempel Key API di paling atas halaman, lalu kirim tugas lagi.";
+                e.answerEl.classList.add("show");
+                e.answerEl.classList.remove("err");
+                feed(e.name+" menunggu key — tidak menjawab sampai key ditempel.");
+                return { name:e.name, text:"", ok:false, waitingKey:true };
+              });
+            }
+            return wait(i*450).then(function(){
+              setEmpStatus(e, "Menerima tugas", "work");
+              feed(e.name+" menerima tugas.");
+              return wait(550);
+            }).then(function(){
+              setEmpStatus(e, "Mengetik…", "work");
+              e.card.classList.remove("idle"); e.card.classList.add("working");
+              startProgress(e);
+              feed(e.name+" mulai bekerja.");
+              return askEmployee(e, task).then(function(r){
+                e.card.classList.remove("working"); e.card.classList.add("idle");
+                stopProgress(e, true);
+                setEmpStatus(e, "Selesai", "done");
+                e.answerEl.textContent = r.text;
+                e.answerEl.classList.add("show"); e.answerEl.classList.remove("err");
+                e.routeEl.textContent = "via "+r.route;
+                e.foot.classList.add("show");
+                feed(e.name+" selesai menjawab.");
+                return { name:e.name, text:r.text, ok:true };
+              }, function(err){
+                e.card.classList.remove("working"); e.card.classList.add("idle");
+                stopProgress(e, false);
+                setEmpStatus(e, "Gagal", "fail");
+                e.answerEl.textContent = "Maaf, "+e.name+" gagal menjawab kali ini ("+(err && err.message ? err.message : "koneksi bermasalah")+"). Coba kirim lagi sebentar lagi.";
+                e.answerEl.classList.add("show","err");
+                e.foot.classList.remove("show");
+                feed(e.name+" gagal menjawab — koneksi/API bermasalah.");
+                return { name:e.name, text:"", ok:false };
+              });
+            });
+          });
+          return Promise.all(jobs);
+        }).then(function(results){
+          setStep("build","done");
+          var answers = results.filter(function(r){ return r.ok; });
+
+          /* Tahap 4 — Manager bantu + gabungkan */
+          setStep("merge","active");
+          managerSay(answers.length ? "Bagus, tim! Sekarang saya ikut bekerja — saya gabungkan jawaban kalian jadi satu hasil akhir untuk Bos." : "Hmm, belum ada jawaban yang masuk. Saya cek lagi untuk Bos…");
+          managerHelp(true);
+          feed("Manager ikut membantu dan menggabungkan "+answers.length+" jawaban karyawan.");
+
+          var mergePromise;
+          if(answers.length){
+            mergePromise = askManager(task, answers).then(function(t){
+              return { text:t, note:"Digabungkan oleh Muse (Manager) dari "+answers.length+" jawaban asli karyawan." };
+            }, function(){
+              var joined = answers.map(function(a){ return "— "+a.name+" —\n"+a.text; }).join("\n\n");
+              return { text:joined, note:"Rangkuman otomatis gagal dibuat, jadi jawaban karyawan digabung apa adanya." };
+            });
+          } else {
+            mergePromise = wait(800).then(function(){
+              return { text:"Belum ada jawaban yang berhasil diterima dari karyawan pada percobaan ini — kemungkinan koneksi internet atau layanan AI sedang bermasalah. Silakan coba kirim lagi sebentar lagi.", note:"Tidak ada jawaban karyawan yang bisa digabungkan kali ini." };
+            });
+          }
+          return mergePromise.then(function(final){ return { final:final, answers:answers }; });
+        }).then(function(out){
+          managerHelp(false);
+
+          /* Tahap 5 — Hasil untuk Bos */
+          setStep("merge","done");
+          setStep("result","active");
+          finalText.textContent = out.final.text;
+          finalMeta.textContent = out.final.note;
+          hasilCard.classList.add("show");
+          managerSay("Selesai, Bos! Hasil gabungannya sudah siap di panel Hasil untuk Bos.");
+          feed("Hasil akhir diserahkan ke Bos.");
+
+          if(out.answers.length){
+            tasksToday += 1;
+            LS.set("aiml_tasks_today", JSON.stringify({ date: todayStr(), count: tasksToday }));
+            answersTotal += out.answers.length;
+            LS.set("aiml_answers_total", String(answersTotal));
+            renderStats();
+          }
+          return wait(500);
+        }).then(function(){
+          setStep("result","done");
+          busy = false; sendBtn.disabled = false; sendBtn.textContent = "Kirim ke Tim";
+          hasilCard.scrollIntoView({ behavior:"smooth", block:"start" });
+        }).catch(function(){
+          busy = false; sendBtn.disabled = false; sendBtn.textContent = "Kirim ke Tim";
+          managerHelp(false); managerPoint(false);
+          feed("Terjadi kesalahan tak terduga. Silakan coba lagi.");
+        });
+      }
+
+      /* ================= Panel key UTAMA ================= */
+      var keyInput = document.getElementById("keyInput");
+      var keyStatus = document.getElementById("keyStatus");
+      var keyBadge = document.getElementById("keyBadge");
+      var keyReminder = document.getElementById("keyReminder");
+      var routeNote = document.getElementById("routeNote");
+      function renderKey(){
+        var k = getKey();
+        if(k){
+          keyStatus.textContent = "✅ Key tersimpan di perangkat ini. ChatGPT, Claude & DeepSeek AKTIF dan akan memakai model gratis OpenRouter.";
+          keyStatus.classList.add("ok");
+          if(keyBadge){ keyBadge.textContent = "Key aktif — ChatGPT, Claude & DeepSeek siap kerja"; keyBadge.classList.add("ok"); }
+          if(keyReminder) keyReminder.classList.remove("show");
+          keyInput.value = "";
+          keyInput.placeholder = "Key sudah tersimpan ••••";
+          routeNote.textContent = "Rute aktif: API Key OpenRouter (model gratis) untuk ChatGPT/Claude/DeepSeek + AI Gratis via Pollinations.";
+          EMP.forEach(function(e){ if(!busy){ if(e.needsKey) setEmpStatus(e, "Siaga — key aktif", ""); } });
+        } else {
+          keyStatus.textContent = "Belum ada key. ChatGPT, Claude & DeepSeek menunggu key dan tidak akan menjawab. Hanya AI Gratis yang jalan tanpa key.";
+          keyStatus.classList.remove("ok");
+          if(keyBadge){ keyBadge.textContent = "Belum ada key — 3 karyawan menunggu"; keyBadge.classList.remove("ok"); }
+          keyInput.placeholder = "sk-or-v1-…";
+          routeNote.textContent = "⚠️ Belum ada key: hanya AI Gratis yang menjawab. Tempel key di panel atas untuk mengaktifkan ChatGPT, Claude & DeepSeek.";
+          EMP.forEach(function(e){ if(!busy){ if(e.needsKey) setEmpStatus(e, "Menunggu key — tempel key di atas", "waitkey"); else setEmpStatus(e, "Siaga", ""); } });
+        }
+      }
+      document.getElementById("keySave").addEventListener("click", function(){
+        var v = keyInput.value.trim();
+        if(!v){ keyStatus.textContent = "Tempel key dulu, lalu simpan."; return; }
+        LS.set("aiml_key", v);
+        feed("Key OpenRouter disimpan di perangkat ini.");
+        renderKey();
+      });
+      document.getElementById("keyClear").addEventListener("click", function(){
+        LS.del("aiml_key");
+        feed("Key OpenRouter dihapus dari perangkat ini.");
+        renderKey();
+      });
+      renderKey();
+
+      /* Sambutan awal */
+      if(getKey()){
+        managerSay("Halo Bos! Key API sudah aktif — ChatGPT, Claude, DeepSeek & AI Gratis siap. Kirim ide atau tugas, tim langsung kerja live di sini.");
+      } else {
+        managerSay("Halo Bos! Tempel key API dulu di panel paling atas ya — ChatGPT, Claude & DeepSeek masih menunggu key. AI Gratis sudah siap kalau mau langsung coba.");
+      }
+      feed("Sesi live dimulai. "+(getKey() ? "Key API aktif — tim lengkap siaga." : "Belum ada key — 3 karyawan menunggu key, AI Gratis siaga."));
+    })();
+    </script>
+
+    <script>
+    (function(){
+      "use strict";
+      /* ============ ANIMASI: MISI BRANKAS TERAKHIR (12 adegan) ============ */
+      var VOICES = {
+        "RAKA":   { color:"#f2a541", pitch:0.9,  rate:1.0 },
+        "SARI":   { color:"#39c2a5", pitch:1.5,  rate:1.05 },
+        "DIMAS":  { color:"#5b8def", pitch:0.75, rate:0.98 },
+        "KURATOR":{ color:"#b48ce0", pitch:1.1,  rate:0.92 },
+        "NARATOR":{ color:"#ffd98a", pitch:1.0,  rate:1.0 }
+      };
+      var SCENES = [
+        { title:"Pensiun yang Tenang", bg:"cafe", shake:0, chars:[["RAKA",.30,"sit"],["SARI",.72,"stand"]], lines:[
+          ["NARATOR","Makassar, malam hari. Raka, mantan pencuri brankas, sudah 5 tahun pensiun. Katanya."],
+          ["RAKA","Hidup tenang itu enak. Kopi, hujan, tidak ada laser, tidak ada alarm. Sempurna."],
+          ["SARI","Kecuali satu hal, Ka. Kamuutang janji sama aku: satu misi terakhir kalau aku yang minta."],
+          ["RAKA","Sari… aku sudah gantung sarung tangan. Secara harfiah. Ada di lemari. Berdebu."] ]},
+        { title:"Telepon Tengah Malam", bg:"room", shake:0, chars:[["RAKA",.4,"stand"],["DIMAS",.68,"stand"]], lines:[
+          ["DIMAS","(lewat telepon) Ka! Ada penyewa misterius. Bayarannya… tiga kali lipat dari misi terbesar kita."],
+          ["RAKA","Dimas, jam 2 pagi. Dan kata 'misterius' itu bukan nilai plus."],
+          ["DIMAS","Targetnya berlian Bintang Malam. Di museum. Cuma dipajang 3 malam."],
+          ["RAKA","…Kirim detailnya. Bukan karena uangnya. Karena aku benci penasaran."] ]},
+        { title:"Tim Lama Berkumpul", bg:"base", shake:0, chars:[["RAKA",.24,"point"],["SARI",.5,"type"],["DIMAS",.78,"stand"]], lines:[
+          ["RAKA","Oke. Sekali ini saja. Sari, kamu urus sistem. Dimas, rute kabur. Aku yang masuk."],
+          ["SARI","Sistem museumnya baru. Tapi semua sistem punya satu kelemahan klasik: manusia yang jaga malam."],
+          ["DIMAS","Mobil sudah siap. Mesin halus, plat bersih, bensin penuh. Aku bahkan sudah latihan parkir mundur."],
+          ["RAKA","Kita masuk jam 1, keluar jam 1 lewat 10. Tidak ada yang terluka, tidak ada yang ketahuan."] ]},
+        { title:"Survei Museum", bg:"museum", shake:0, chars:[["RAKA",.3,"walk"],["SARI",.62,"walk"]], lines:[
+          ["NARATOR","Siang harinya, mereka menyamar jadi pengunjung museum."],
+          ["SARI","(berbisik) Kamera ada 14. Tapi ada satu titik buta di dekat tangga servis. 40 detik."],
+          ["RAKA","Dan berliannya di lantai dua, ruang pamer utama. Di dalam brankas pajang berkaca anti-peluru."],
+          ["SARI","Yang kuncinya bukan kunci. Sidik jari kurator. Itu masalahnya… atau peluangnya."] ]},
+        { title:"Rencana Sari", bg:"hack", shake:0, chars:[["SARI",.42,"type"],["RAKA",.72,"stand"]], lines:[
+          ["SARI","Aku sudah rekam sidik jari kurator dari gelas kopinya di kafe museum. Cetakan silikonnya jadi besok."],
+          ["RAKA","Kamu menakutkan. Untung kamu di timku."],
+          ["SARI","Satu lagi: lorong menuju brankas dipasangi laser gerak model baru. Polanya berubah tiap 9 detik."],
+          ["RAKA","9 detik. Cukup. Dulu aku lewat lorong yang lebih parah… sambil flu."] ]},
+        { title:"Malam Misi — Masuk dari Atap", bg:"roof", shake:1, chars:[["RAKA",.34,"crouch"],["SARI",.6,"crouch"],["DIMAS",.85,"stand"]], lines:[
+          ["NARATOR","Pukul 01.00. Hujan rintik. Kota tidur. Tim bergerak."],
+          ["DIMAS","(radio) Posisi aman. Jalan belakang kosong. Aku tunggu di titik jemput. Jangan lama-lama, aku gugup."],
+          ["SARI","(radio) Sistem kamera aku bekukan di loop rekaman kemarin. Kalian hantu sekarang."],
+          ["RAKA","Turun pelan-pelan. Ingat: kita cuma pinjam berliannya. Selamanya."] ]},
+        { title:"Lorong Laser", bg:"laser", shake:2, chars:[["RAKA",.5,"crouch"]], lines:[
+          ["NARATOR","Lorong laser. Satu sentuhan saja, seluruh museum bangun."],
+          ["RAKA","(menahan napas) Sembilan detik… pola bergeser… sekarang!"],
+          ["SARI","(radio) Ka, ada pola baru! Laser cadangan aktif — jongkok, jangan bergerak!"],
+          ["RAKA","…Lolos. Ingatkan aku untuk tidak pernah pensiun lagi. Pensiun ternyata lebih menegangkan."] ]},
+        { title:"Brankas Dibuka", bg:"vault", shake:1, chars:[["RAKA",.42,"stand"],["SARI",.7,"point"]], lines:[
+          ["SARI","Tempelkan cetakan sidik jarinya. Pelan… pelan…"],
+          ["RAKA","Klik pertama… klik kedua… Brankas museum, kenapa pintumu berat sekali—"],
+          ["NARATOR","Pintu brankas berputar terbuka. Di dalamnya, di atas beludru merah: Bintang Malam."],
+          ["RAKA","Halo, cantik. Lama tidak jumpa— eh, maksudku, salam kenal. Ayo pulang."] ]},
+        { title:"Twist — Berlian Palsu", bg:"vault", shake:3, chars:[["RAKA",.38,"stand"],["SARI",.66,"stand"]], lines:[
+          ["SARI","Ka, berhenti. Aku scan sekilas… indeks biasnya salah. Ini bukan berlian."],
+          ["RAKA","Apa? Ini… kaca berkualitas sangat tinggi. Palsu. Museum memajang yang PALSU?!"],
+          ["SARI","Dan penyewa kita tahu persis jam pajangnya, rute kaburnya, semuanya. Terlalu tahu."],
+          ["RAKA","Karena penyewa kita… orang dalam. Kuratornya sendiri."] ]},
+        { title:"Kurator Terungkap", bg:"office", shake:1, chars:[["KURATOR",.3,"stand"],["RAKA",.62,"point"],["SARI",.84,"stand"]], lines:[
+          ["KURATOR","Kalian lebih cepat dari dugaanku. Sayang sekali. Serahkan 'berliannya', dan kalian boleh pergi."],
+          ["RAKA","Rencanamu rapi, Pak Kurator. Kami mencuri yang palsu, kamu klaim asuransi untuk yang asli."],
+          ["KURATOR","Asuransi membayar penuh untuk barang 'yang dicuri'. Aku pensiun kaya. Kalian jadi kambing hitam yang sempurna."],
+          ["SARI","Satu kesalahanmu: semua percakapan ini… aku siarkan ke radio Dimas. Dan Dimas merekam semuanya."] ]},
+        { title:"Brankas Rahasia Kurator", bg:"secret", shake:2, chars:[["RAKA",.36,"crouch"],["SARI",.64,"type"],["KURATOR",.88,"sit"]], lines:[
+          ["NARATOR","Di balik lukisan kantor kurator: brankas rahasia. Di situlah Bintang Malam yang asli disembunyikan."],
+          ["SARI","Kombinasinya tanggal klaim asuransinya sendiri. Klasik. Terbuka!"],
+          ["RAKA","Ini baru Bintang Malam yang asli. Beratnya beda, cahayanya beda. Halo, cantik — yang beneran."],
+          ["KURATOR","Jangan! Itu masa depanku! — Baik, baik. Aku menyerah. Polisi sudah di jalan, kan?"] ]},
+        { title:"Kabur Menjelang Fajar", bg:"road", shake:1, chars:[["DIMAS",.26,"drive"],["RAKA",.52,"sit"],["SARI",.78,"sit"]], lines:[
+          ["DIMAS","PEGANGAN! Aku sudah bilang aku latihan parkir mundur — bukan ngebut. Tapi demi kalian, GAS!"],
+          ["RAKA","Berlian asli kita kembalikan ke museum lewat kurir tanpa nama. Kuratornya? Rekamannya sudah di polisi."],
+          ["SARI","Bayaran dari penyewa batal, tapi museum memberi imbalan resmi karena berliannya selamat. Lumayan juga."],
+          ["RAKA","Dan aku pensiun lagi. Kali ini beneran. …Kecuali ada misi yang sangat, sangat menarik."],
+          ["NARATOR","Fajar menyingsing. Bintang Malam kembali ke tempatnya. Tim Raka? Sudah sarapan. TAMAT."] ]}
+      ];
+      SCENES.forEach(function(s){
+        s.dur = s.lines.reduce(function(a,l){ return a + Math.max(3.2, l[1].length*0.062); }, 0);
+      });
+      var totalDur = SCENES.reduce(function(a,s){ return a+s.dur; }, 0);
+
+      var cv = document.getElementById("animCanvas"), cx = cv.getContext("2d");
+      var subSpk = document.getElementById("subSpeaker"), subTxt = document.getElementById("subText");
+      var progEl = document.getElementById("animProg"), metaEl = document.getElementById("animMeta");
+      var btnPlay = document.getElementById("btnPlay"), selScene = document.getElementById("sceneSelect"), selSpeed = document.getElementById("speedSelect"), ttsTgl = document.getElementById("ttsToggle");
+      var grid = document.getElementById("sceneGrid");
+      var st = { playing:false, scene:0, t:0, speed:1, lastLine:-1, startedAt:null, raf:null, lastTs:0 };
+
+      SCENES.forEach(function(s,i){
+        var o=document.createElement("option"); o.value=i; o.textContent=(i+1)+". "+s.title; selScene.appendChild(o);
+        var b=document.createElement("button"); b.type="button"; b.className="scene-btn"; b.innerHTML=(i+1)+". "+s.title+"<small>"+s.lines.length+" dialog • ±"+Math.round(s.dur)+" detik</small>";
+        b.addEventListener("click", function(){ gotoScene(i, st.playing); }); grid.appendChild(b);
+      });
+      function markSceneUI(){
+        selScene.value = st.scene;
+        Array.prototype.forEach.call(grid.children, function(b,i){ b.classList.toggle("on", i===st.scene); });
+      }
+
+      /* ---------- WebAudio SFX ---------- */
+      var AC=null;
+      function beep(f,t0,d,type,g){ if(!AC) return; var o=AC.createOscillator(), gn=AC.createGain(); o.type=type||"sine"; o.frequency.value=f; gn.gain.setValueAtTime(g||.06, AC.currentTime+t0); gn.gain.exponentialRampToValueAtTime(.0001, AC.currentTime+t0+d); o.connect(gn); gn.connect(AC.destination); o.start(AC.currentTime+t0); o.stop(AC.currentTime+t0+d); }
+      function sfx(name){
+        try{ if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended") AC.resume(); }catch(e){ return; }
+        if(name==="laser"){ beep(880,0,.12,"sawtooth",.03); beep(1320,.1,.12,"sawtooth",.03); }
+        if(name==="vault"){ beep(220,0,.15,"square",.05); beep(330,.18,.15,"square",.05); beep(520,.36,.3,"square",.05); }
+        if(name==="alarm"){ for(var i=0;i<3;i++){ beep(740,i*.22,.16,"square",.05); } }
+        if(name==="engine"){ beep(90,0,.5,"sawtooth",.07); beep(120,.3,.5,"sawtooth",.06); }
+        if(name==="ok"){ beep(660,0,.12,"sine",.06); beep(990,.12,.2,"sine",.06); }
+      }
+
+      /* ---------- TTS per karakter ---------- */
+      function speak(who, text){
+        if(!ttsTgl.checked || !("speechSynthesis" in window)) return;
+        try{
+          speechSynthesis.cancel();
+          var u = new SpeechSynthesisUtterance(text.replace(/\(.*?\)/g,"").trim());
+          u.lang = "id-ID"; var v = VOICES[who]||VOICES.NARATOR; u.pitch=v.pitch; u.rate=v.rate*(st.speed>1.25?1.1:1);
+          speechSynthesis.speak(u);
+        }catch(e){}
+      }
+      function stopSpeak(){ try{ if("speechSynthesis" in window) speechSynthesis.cancel(); }catch(e){} }
+
+      /* ---------- Gambar latar ---------- */
+      function bgBase(top,bot){ var g=cx.createLinearGradient(0,0,0,540); g.addColorStop(0,top); g.addColorStop(1,bot); cx.fillStyle=g; cx.fillRect(0,0,960,540); }
+      function floor(y){ cx.fillStyle="rgba(0,0,0,.28)"; cx.fillRect(0,y,960,540-y); cx.strokeStyle="rgba(255,255,255,.14)"; cx.beginPath(); cx.moveTo(0,y); cx.lineTo(960,y); cx.stroke(); }
+      function drawBG(kind, t){
+        if(kind==="cafe"){ bgBase("#2b2118","#171008"); floor(430); cx.fillStyle="#4a3220"; cx.fillRect(120,330,300,18); cx.fillRect(560,330,300,18); cx.fillStyle="#ffd98a"; cx.beginPath(); cx.arc(190,90,26,0,7); cx.arc(770,90,26,0,7); cx.fill(); cx.fillStyle="rgba(255,217,138,.15)"; cx.fillRect(0,0,960,540); }
+        else if(kind==="room"){ bgBase("#141c2e","#0a0e18"); floor(440); cx.fillStyle="#1d2a44"; cx.fillRect(640,120,220,240); cx.fillStyle="#9fc3ff"; cx.fillRect(660,140,180,110); cx.fillStyle="#fff"; cx.beginPath(); cx.arc(800,165,16,0,7); cx.fill(); }
+        else if(kind==="base"){ bgBase("#18222c","#0d1319"); floor(440); cx.fillStyle="#22303d"; cx.fillRect(60,90,380,200); cx.strokeStyle="#39c2a5"; cx.lineWidth=3; for(var i=0;i<4;i++){ cx.beginPath(); cx.moveTo(90,130+i*38); cx.lineTo(90+180+((i*67)%140),130+i*38); cx.stroke(); } cx.fillStyle="#ffd98a"; cx.fillRect(560,110,300,14); }
+        else if(kind==="museum"){ bgBase("#3d3a33","#211e19"); floor(450); cx.fillStyle="#57534a"; for(var x=60;x<900;x+=210){ cx.fillRect(x,70,150,250); cx.fillStyle="#c9b98a"; cx.fillRect(x+18,92,114,150); cx.fillStyle="#57534a"; } cx.fillStyle="#e8dcc0"; cx.font="700 30px sans-serif"; cx.textAlign="center"; cx.fillText("MUSEUM",480,52); cx.textAlign="left"; }
+        else if(kind==="hack"){ bgBase("#0a1a16","#050d0b"); floor(445); cx.fillStyle="#0f2c24"; cx.fillRect(300,90,360,220); cx.fillStyle="#7ee2b8"; for(var r=0;r<6;r++){ for(var c2=0;c2<10;c2++){ if((r*7+c2*3+Math.floor(t*2))%4===0) cx.fillRect(322+c2*32,112+r*32,20,8); } } }
+        else if(kind==="roof"){ bgBase("#0d1524","#070b13"); floor(460); cx.fillStyle="#1a2740"; for(var b=0;b<6;b++){ cx.fillRect(b*165+10,300-(b%3)*40,120,200); } cx.fillStyle="#ffe9a8"; for(var w=0;w<40;w++){ cx.fillRect((w*197)%940,330+((w*53)%100),5,7); } cx.fillStyle="#dfe9ff"; cx.beginPath(); cx.arc(855,80,30,0,7); cx.fill(); cx.strokeStyle="rgba(160,190,255,.5)"; cx.lineWidth=2; for(var rn=0;rn<26;rn++){ var rx=(rn*89+((t*260)%90))%960, ry=(rn*61+((t*420)%160))%420; cx.beginPath(); cx.moveTo(rx,ry); cx.lineTo(rx-5,ry+16); cx.stroke(); } }
+        else if(kind==="laser"){ /* 3D: koridor perspektif */
+          bgBase("#12060a","#050203"); var vx=480, vy=250;
+          cx.strokeStyle="rgba(255,255,255,.18)"; cx.lineWidth=2;
+          [[0,0],[960,0],[0,540],[960,540],[0,180],[960,180],[0,380],[960,380]].forEach(function(p){ cx.beginPath(); cx.moveTo(p[0],p[1]); cx.lineTo(vx,vy); cx.stroke(); });
+          cx.strokeStyle="rgba(255,255,255,.35)"; cx.strokeRect(400,190,160,120);
+          cx.strokeStyle="#ff3b4e"; cx.lineWidth=3; cx.shadowColor="#ff3b4e"; cx.shadowBlur=12;
+          for(var L=0;L<6;L++){ var zz=((L/6)+((t*.14)%(1/6)))%1, sc2=.25+zz*.95, yy=vy+Math.sin(L*2.1+t*1.4)*70*sc2, xx=vx+Math.cos(L*1.7)*180*sc2; cx.globalAlpha=.35+zz*.65; cx.beginPath(); cx.moveTo(vx-240*sc2,yy); cx.lineTo(vx+240*sc2,yy+((L%2)?26:-26)*sc2); cx.stroke(); cx.beginPath(); cx.moveTo(xx,vy-130*sc2); cx.lineTo(xx+((L%2)?40:-40)*sc2,vy+130*sc2); cx.stroke(); }
+          cx.globalAlpha=1; cx.shadowBlur=0; floor(470);
+        }
+        else if(kind==="vault"||kind==="secret"){ /* 3D: pintu brankas melingkar */
+          bgBase("#241d12","#100c05"); floor(455);
+          var open = kind==="secret" ? .85 : Math.min(.8, .15+ (st.t/ Math.max(1,SCENES[st.scene].dur))*.9 );
+          cx.save(); cx.translate(480,265); cx.scale(1+open*.12,1+open*.12);
+          cx.fillStyle="#3a3f46"; cx.beginPath(); cx.arc(0,0,168,0,7); cx.fill();
+          cx.fillStyle="#596069"; cx.beginPath(); cx.arc(0,0,140,0,7); cx.fill();
+          cx.save(); cx.rotate(t*.25*(kind==="vault"?1:.3)); cx.strokeStyle="#c8ccd2"; cx.lineWidth=10; cx.beginPath(); cx.arc(0,0,86,0,7); cx.stroke(); cx.lineWidth=7; for(var s2=0;s2<6;s2++){ var a=s2*Math.PI/3; cx.beginPath(); cx.moveTo(0,0); cx.lineTo(Math.cos(a)*86,Math.sin(a)*86); cx.stroke(); } cx.restore();
+          cx.fillStyle="#ffd94d"; cx.beginPath(); cx.arc(0,0,20,0,7); cx.fill(); cx.restore();
+          if(open>.45){ cx.save(); cx.translate(480+150*open,265); cx.fillStyle="rgba(255,230,150,.9)"; cx.beginPath(); cx.moveTo(0,-34); cx.lineTo(26,10); cx.lineTo(0,52); cx.lineTo(-26,10); cx.closePath(); cx.fill(); cx.restore(); }
+        }
+        else if(kind==="office"){ bgBase("#262036","#130f1e"); floor(445); cx.fillStyle="#3a3157"; cx.fillRect(90,110,260,180); cx.fillStyle="#d8c690"; cx.fillRect(115,135,210,110); cx.fillStyle="#4a3f2a"; cx.fillRect(600,300,300,20); }
+        else if(kind==="road"){ var g2=cx.createLinearGradient(0,0,0,540); g2.addColorStop(0,"#f7a54d"); g2.addColorStop(.55,"#e2603f"); g2.addColorStop(1,"#33202a"); cx.fillStyle=g2; cx.fillRect(0,0,960,540); cx.fillStyle="#ffd98a"; cx.beginPath(); cx.arc(480,300,44,0,7); cx.fill(); floor(430); cx.fillStyle="#151d2b"; cx.fillRect(180,318,600,86); cx.fillStyle="#22314d"; cx.fillRect(210,286,540,44); cx.fillStyle="#a8d4ff"; cx.fillRect(238,294,90,28); cx.fillRect(360,294,90,28); cx.fillRect(520,294,90,28); cx.fillStyle="#0a0e16"; [-1,1].forEach(function(sg){ [300,660].forEach(function(wx){ cx.beginPath(); cx.arc(wx,404,26,0,7); cx.fill(); }); }); cx.strokeStyle="rgba(255,255,255,.55)"; cx.setLineDash([26,22]); cx.lineDashOffset=-t*160; cx.lineWidth=5; cx.beginPath(); cx.moveTo(0,478); cx.lineTo(960,478); cx.stroke(); cx.setLineDash([]); }
+        else { bgBase("#1a2027","#0d1116"); floor(440); }
+      }
+
+      /* ---------- Stickman gerak manusiawi ---------- */
+      function stick(x,y,s,color,pose,t,seed){
+        var sw=Math.sin(t*2.1+seed), walk=(pose==="walk"), run=walk?Math.sin(t*9+seed):0;
+        var bobY = walk? Math.abs(Math.sin(t*9+seed))*5 : Math.sin(t*2.1+seed)*2.2;
+        var crouch = (pose==="crouch")?16:0, sit=(pose==="sit"||pose==="drive")?1:0;
+        var hipY=y-bobY-(sit?26:44)+crouch*.5, shY=hipY-52+crouch, headY=shY-24;
+        cx.strokeStyle=color; cx.fillStyle=color; cx.lineWidth=6*s; cx.lineCap="round"; cx.lineJoin="round";
+        cx.beginPath(); cx.arc(x,headY,15*s,0,7); cx.stroke();
+        cx.fillRect(x+4*s,headY-3*s,3.4,3.4); /* mata */
+        cx.beginPath(); cx.moveTo(x,shY); cx.lineTo(x,hipY); cx.stroke(); /* badan */
+        var a1,a2;
+        if(pose==="type"){ a1=[x+30*s+sw*3,hipY-8]; a2=[x+34*s-sw*3,hipY-6]; }
+        else if(pose==="point"){ a1=[x+44*s,shY-6]; a2=[x-16*s,hipY-4]; }
+        else if(pose==="drive"){ a1=[x+34*s,shY+12]; a2=[x+36*s,shY+20]; }
+        else if(walk){ a1=[x+run*22*s,hipY-6]; a2=[x-run*22*s,hipY-6]; }
+        else if(pose==="crouch"){ a1=[x+30*s,hipY+4]; a2=[x-26*s,hipY+2]; }
+        else { a1=[x+18*s+sw*4,hipY-2]; a2=[x-18*s-sw*4,hipY-2]; }
+        cx.beginPath(); cx.moveTo(x,shY+8); cx.lineTo(a1[0],a1[1]); cx.moveTo(x,shY+10); cx.lineTo(a2[0],a2[1]); cx.stroke();
+        if(sit){ cx.beginPath(); cx.moveTo(x,hipY); cx.lineTo(x+30*s,hipY+2); cx.lineTo(x+30*s,hipY+26); cx.moveTo(x,hipY); cx.lineTo(x-8*s,hipY+24); cx.stroke(); }
+        else if(walk){ cx.beginPath(); cx.moveTo(x,hipY); cx.lineTo(x+run*26*s,hipY+22); cx.lineTo(x+run*26*s+8*s,y); cx.moveTo(x,hipY); cx.lineTo(x-run*26*s,hipY+22); cx.lineTo(x-run*26*s-8*s,y); cx.stroke(); }
+        else if(pose==="crouch"){ cx.beginPath(); cx.moveTo(x,hipY); cx.lineTo(x+24*s,hipY+14); cx.lineTo(x+18*s,y); cx.moveTo(x,hipY); cx.lineTo(x-22*s,hipY+14); cx.lineTo(x-28*s,y); cx.stroke(); }
+        else { cx.beginPath(); cx.moveTo(x,hipY); cx.lineTo(x+15*s,y); cx.moveTo(x,hipY); cx.lineTo(x-15*s,y); cx.stroke(); }
+        if(pose==="drive"){ cx.strokeStyle="rgba(230,238,248,.85)"; cx.lineWidth=5; cx.beginPath(); cx.arc(x+52*s,shY+22,17*s,-.6,2.4); cx.stroke(); }
+      }
+      function drawDesk(x,y){ cx.fillStyle="#5d6d7a"; cx.fillRect(x-6,y-4,86,8); cx.fillRect(x+64,y+4,7,30); cx.fillStyle="#1d2a33"; cx.fillRect(x+18,y-38,52,32); cx.fillStyle="#7ee2b8"; cx.fillRect(x+24,y-31,28,5); cx.fillRect(x+24,y-22,36,5); }
+
+      function currentLine(){
+        var s=SCENES[st.scene], acc=0;
+        for(var i=0;i<s.lines.length;i++){ var d=Math.max(3.2, s.lines[i][1].length*0.062); if(st.t < acc+d) return { idx:i, who:s.lines[i][0], text:s.lines[i][1] }; acc+=d; }
+        var l=s.lines[s.lines.length-1]; return { idx:s.lines.length-1, who:l[0], text:l[1] };
+      }
+      function elapsedBefore(idx){ var a=0; for(var i=0;i<idx;i++) a+=SCENES[i].dur; return a; }
+
+      function render(now){
+        var s=SCENES[st.scene];
+        var shX=0, shY=0;
+        if(s.shake && st.playing){ var m=s.shake*1.1; shX=(Math.random()-.5)*m; shY=(Math.random()-.5)*m; }
+        cx.save(); cx.translate(shX,shY); cx.clearRect(-6,-6,972,552);
+        drawBG(s.bg, now/1000);
+        /* properti per pose */
+        s.chars.forEach(function(c,ci){
+          var x=c[1]*960, gy=452, pose=c[2];
+          if(s.bg==="road") gy=300;
+          if(pose==="sit" && s.bg!=="road"){ drawDesk(x-52,gy-6); }
+          if(pose==="type"){ drawDesk(x-52,gy-6); }
+          if(pose==="drive") x=c[1]*960;
+          var xx = pose==="walk" ? x + Math.sin(now/2400+ci)*60 : x;
+          stick(xx, gy, 1.05, (VOICES[c[0]]||{}).color||"#fff", pose, now/1000, ci*1.7);
+          cx.fillStyle="#fff"; cx.font="800 17px sans-serif"; cx.textAlign="center"; cx.fillText(c[0], xx, gy+30); cx.textAlign="left";
+        });
+        if(s.bg==="laser"){ cx.fillStyle="rgba(255,59,78,.9)"; cx.font="800 20px sans-serif"; cx.textAlign="center"; cx.fillText("⚠ LASER AKTIF ⚠",480,48); cx.textAlign="left"; }
+        cx.restore();
+
+        var ln=currentLine();
+        if(ln.idx!==st.lastLine){
+          st.lastLine=ln.idx;
+          subSpk.textContent=ln.who+" — ADEGAN "+(st.scene+1)+": "+s.title.toUpperCase();
+          subSpk.style.color=(VOICES[ln.who]||{}).color||"#ffd98a";
+          subTxt.textContent=ln.text;
+          if(st.playing){ speak(ln.who, ln.text);
+            if(st.scene===6 && ln.idx===0) sfx("laser");
+            if(st.scene===7 && ln.idx===1) sfx("vault");
+            if(st.scene===8 && ln.idx===1) sfx("alarm");
+            if(st.scene===11 && ln.idx===0) sfx("engine");
+          }
+        }
+        var overall=(elapsedBefore(st.scene)+st.t)/totalDur;
+        progEl.style.width=Math.min(100,overall*100)+"%";
+        var mm=Math.floor(st.t/60), ss2=Math.floor(st.t%60);
+        metaEl.textContent="Adegan "+(st.scene+1)+" dari 12 — "+s.title+" • Posisi adegan "+(mm<10?"0":"")+mm+":"+(ss2<10?"0":"")+ss2+" • Total cerita ±"+Math.round(totalDur)+" detik di kecepatan 1× (dengan jeda suara TTS terasa ±8 menit) • Lorong laser & brankas tampil dengan efek kedalaman 3D di kanvas.";
+      }
+
+      function loop(ts){
+        if(!st.playing) return;
+        if(!st.lastTs) st.lastTs=ts;
+        var dt=Math.min(.05,(ts-st.lastTs)/1000)*st.speed; st.lastTs=ts;
+        st.t+=dt;
+        var s=SCENES[st.scene];
+        if(st.t>=s.dur){
+          if(st.scene<SCENES.length-1){ st.scene++; st.t=0; st.lastLine=-1; markSceneUI(); sfx("ok"); }
+          else { st.playing=false; btnPlay.textContent="▶ Putar Lagi"; stopSpeak(); subSpk.textContent="TAMAT"; subTxt.textContent="Misi selesai. Bintang Malam selamat, kurator ditangkap, dan Raka… pensiun lagi. Tekan Ulang untuk menonton dari awal."; }
+        }
+        render(ts);
+        if(st.playing) st.raf=requestAnimationFrame(loop);
+      }
+      function play(){
+        if(st.scene===SCENES.length-1 && st.t>=SCENES[st.scene].dur-0.1){ st.scene=0; st.t=0; st.lastLine=-1; markSceneUI(); }
+        st.playing=true; st.lastTs=0; btnPlay.textContent="⏸ Jeda";
+        try{ if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+        st.raf=requestAnimationFrame(loop);
+      }
+      function pause(){ st.playing=false; btnPlay.textContent="▶ Putar"; stopSpeak(); if(st.raf) cancelAnimationFrame(st.raf); render(performance.now()); }
+      function gotoScene(i, autoplay){
+        st.scene=Math.max(0,Math.min(SCENES.length-1,i)); st.t=0; st.lastLine=-1; markSceneUI(); stopSpeak();
+        render(performance.now());
+        if(autoplay && !st.playing) play(); else if(st.playing){ st.lastLine=-1; }
+      }
+      btnPlay.addEventListener("click", function(){ st.playing? pause() : play(); });
+      document.getElementById("btnRestart").addEventListener("click", function(){ gotoScene(0,false); play(); document.getElementById("animasiSection").scrollIntoView({behavior:"smooth",block:"start"}); });
+      document.getElementById("btnPrevScene").addEventListener("click", function(){ gotoScene(st.scene-1, st.playing); });
+      document.getElementById("btnNextScene").addEventListener("click", function(){ gotoScene(st.scene+1, st.playing); });
+      selScene.addEventListener("change", function(){ gotoScene(parseInt(this.value,10), st.playing); });
+      selSpeed.addEventListener("change", function(){ st.speed=parseFloat(this.value)||1; });
+      ttsTgl.addEventListener("change", function(){ if(!this.checked) stopSpeak(); });
+      document.getElementById("btnFull").addEventListener("click", function(){
+        var w=document.getElementById("playerWrap");
+        if(document.fullscreenElement){ document.exitFullscreen(); }
+        else if(w.requestFullscreen){ w.requestFullscreen(); }
+      });
+      cv.addEventListener("click", function(){ st.playing? pause() : play(); });
+      markSceneUI(); render(performance.now());
+      /* gambar ulang ringan saat jeda supaya kedip mata/napas tetap hidup */
+      setInterval(function(){ if(!st.playing) render(performance.now()); }, 900);
+    })();
+    </script>
+  </body>
+</html>
